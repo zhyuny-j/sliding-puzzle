@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning className={cn("font-sans", outfit.variable, arcadeHeading.variable)}>
-      <body className={cn(outfit.variable, "antialiased", "retro-scanlines")}>
+      <body className={cn(outfit.variable, "antialiased")}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
         </ThemeProvider>

@@ -134,27 +134,8 @@
   }
 }
 
-/* 레트로 게임 스타일: 픽셀 보더 + CRT 스캔라인 */
+/* 레트로 게임 스타일: 픽셀 보더 */
 .pixel-border {
   border: 3px solid var(--foreground);
   box-shadow: 6px 6px 0 0 var(--foreground);
-}
-
-.retro-scanlines {
-  position: relative;
-}
-
-.retro-scanlines::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    oklch(0 0 0 / 15%),
-    oklch(0 0 0 / 15%) 1px,
-    transparent 1px,
-    transparent 3px
-  );
 }

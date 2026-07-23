@@ -72,8 +72,8 @@ export function PuzzleApp() {
           </CardContent>
         </Card>
 
-        <Card className="items-center justify-center">
-          <CardContent className="flex min-h-70 flex-col items-center justify-center gap-2">
+        <Card>
+          <CardContent className="flex min-h-70 flex-col gap-2">
             {selectedImage && isSolved ? (
               <SuccessPanel
                 image={selectedImage}
@@ -90,7 +90,7 @@ export function PuzzleApp() {
                 onReset={reset}
               />
             ) : (
-              <p className="text-sm text-muted-foreground">이미지를 선택해주세요</p>
+              <p className="m-auto text-sm text-muted-foreground">이미지를 선택해주세요</p>
             )}
           </CardContent>
         </Card>

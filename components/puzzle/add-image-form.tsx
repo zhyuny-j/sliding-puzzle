@@ -59,6 +59,35 @@ export function AddImageForm({ onAddImage }: AddImageFormProps) {
         <Button type="submit" disabled={submitting}>
           추가
         </Button>
+        <p className="text-xs text-muted-foreground">
+          무료 이미지 찾기:{" "}
+          <a
+            href="https://unsplash.com"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            Unsplash
+          </a>
+          ,{" "}
+          <a
+            href="https://www.pexels.com"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            Pexels
+          </a>
+          ,{" "}
+          <a
+            href="https://pixabay.com"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            Pixabay
+          </a>
+        </p>
       </FieldGroup>
     </form>
   )
