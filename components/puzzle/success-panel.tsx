@@ -18,6 +18,7 @@ export interface SuccessPanelProps {
 export function SuccessPanel({ image, elapsedMs, onSubmit }: SuccessPanelProps) {
   const [nickname, setNickname] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
+  const [submitted, setSubmitted] = React.useState(false)
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -28,6 +29,7 @@ export function SuccessPanel({ image, elapsedMs, onSubmit }: SuccessPanelProps) 
     }
     setError(null)
     onSubmit(nickname.trim())
+    setSubmitted(true)
   }
 
   return (
@@ -43,21 +45,25 @@ export function SuccessPanel({ image, elapsedMs, onSubmit }: SuccessPanelProps) 
         }}
       />
       <p className="text-sm">완료 시간: {formatElapsedTime(elapsedMs)}</p>
-      <form onSubmit={handleSubmit} className="w-full max-w-56">
-        <FieldGroup>
-          <Field data-invalid={error ? true : undefined}>
-            <FieldLabel htmlFor="success-nickname">아이디</FieldLabel>
-            <Input
-              id="success-nickname"
-              value={nickname}
-              onChange={(event) => setNickname(event.target.value)}
-              aria-invalid={error ? true : undefined}
-            />
-            {error && <FieldError>{error}</FieldError>}
-          </Field>
-          <Button type="submit">제출</Button>
-        </FieldGroup>
-      </form>
+      {submitted ? (
+        <p className="text-sm text-muted-foreground">제출 완료</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="w-full max-w-56">
+          <FieldGroup>
+            <Field data-invalid={error ? true : undefined}>
+              <FieldLabel htmlFor="success-nickname">아이디</FieldLabel>
+              <Input
+                id="success-nickname"
+                value={nickname}
+                onChange={(event) => setNickname(event.target.value)}
+                aria-invalid={error ? true : undefined}
+              />
+              {error && <FieldError>{error}</FieldError>}
+            </Field>
+            <Button type="submit">제출</Button>
+          </FieldGroup>
+        </form>
+      )}
     </div>
   )
 }

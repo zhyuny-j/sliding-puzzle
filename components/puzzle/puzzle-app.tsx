@@ -5,13 +5,16 @@ import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PRESET_IMAGES } from "@/config/puzzle-presets"
 import { usePuzzle } from "@/hooks/use-puzzle"
+import { useRanking } from "@/hooks/use-ranking"
 import type { PuzzleImage } from "@/types/puzzle"
 import { PuzzleBoard } from "./puzzle-board"
+import { RankingPanel } from "./ranking-panel"
 import { SuccessPanel } from "./success-panel"
 
 export function PuzzleApp() {
   const [selectedImage, setSelectedImage] = React.useState<PuzzleImage | null>(null)
   const { board, elapsedMs, moveTile, isSolved } = usePuzzle(selectedImage)
+  const { rankings, submitRanking } = useRanking(selectedImage?.id ?? null)
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
@@ -45,7 +48,7 @@ export function PuzzleApp() {
               <SuccessPanel
                 image={selectedImage}
                 elapsedMs={elapsedMs}
-                onSubmit={() => {}}
+                onSubmit={(nickname) => submitRanking(nickname, elapsedMs)}
               />
             ) : selectedImage ? (
               <PuzzleBoard
@@ -61,11 +64,8 @@ export function PuzzleApp() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>랭킹</CardTitle>
-          </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">아직 기록이 없습니다</p>
+            <RankingPanel imageName={selectedImage?.name ?? null} rankings={rankings} />
           </CardContent>
         </Card>
       </div>

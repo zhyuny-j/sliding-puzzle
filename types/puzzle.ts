@@ -4,3 +4,9 @@ export interface PuzzleImage {
   url: string
   isPreset: boolean
 }
+
+export interface RankingEntry {
+  playerId: string
+  timeMs: number
+  recordedAt: number
+}

@@ -49,4 +49,15 @@ describe("SuccessPanel", () => {
     expect(screen.getByText("아이디를 입력해주세요")).toBeInTheDocument()
     expect(onSubmit).not.toHaveBeenCalled()
   })
+
+  test("제출 후에는 폼이 사라지고 제출 완료 안내가 나타난다 (중복 제출 방지)", async () => {
+    const user = userEvent.setup()
+    render(<SuccessPanel image={image} elapsedMs={0} onSubmit={vi.fn()} />)
+
+    await user.type(screen.getByLabelText("아이디"), "player1")
+    await user.click(screen.getByRole("button", { name: "제출" }))
+
+    expect(screen.getByText("제출 완료")).toBeInTheDocument()
+    expect(screen.queryByLabelText("아이디")).not.toBeInTheDocument()
+  })
 })
