@@ -11,9 +11,11 @@ import { AddImageForm } from "./add-image-form"
 import { PuzzleBoard } from "./puzzle-board"
 import { RankingPanel } from "./ranking-panel"
 import { SuccessPanel } from "./success-panel"
+import { SwitchConfirmDialog } from "./switch-confirm-dialog"
 
 export function PuzzleApp() {
   const [selectedImage, setSelectedImage] = React.useState<PuzzleImage | null>(null)
+  const [pendingImage, setPendingImage] = React.useState<PuzzleImage | null>(null)
   const { images, addImageFromUrl } = useImageLibrary()
   const { board, elapsedMs, moveTile, isSolved, reset } = usePuzzle(selectedImage)
   const { rankings, submitRanking } = useRanking(selectedImage?.id ?? null)
@@ -24,6 +26,23 @@ export function PuzzleApp() {
       setSelectedImage(result.image)
     }
     return result
+  }
+
+  function handleSelectImage(image: PuzzleImage) {
+    if (selectedImage && !isSolved && image.id !== selectedImage.id) {
+      setPendingImage(image)
+      return
+    }
+    setSelectedImage(image)
+  }
+
+  function handleConfirmSwitch() {
+    if (pendingImage) setSelectedImage(pendingImage)
+    setPendingImage(null)
+  }
+
+  function handleCancelSwitch() {
+    setPendingImage(null)
   }
 
   return (
@@ -42,7 +61,7 @@ export function PuzzleApp() {
                   key={image.id}
                   type="button"
                   aria-label={image.name}
-                  onClick={() => setSelectedImage(image)}
+                  onClick={() => handleSelectImage(image)}
                   data-selected={selectedImage?.id === image.id}
                   className="aspect-square rounded-md border bg-cover bg-center data-[selected=true]:ring-2 data-[selected=true]:ring-ring"
                   style={{ backgroundImage: `url(${image.url})` }}
@@ -82,6 +101,12 @@ export function PuzzleApp() {
           </CardContent>
         </Card>
       </div>
+
+      <SwitchConfirmDialog
+        open={pendingImage !== null}
+        onConfirm={handleConfirmSwitch}
+        onCancel={handleCancelSwitch}
+      />
     </div>
   )
 }

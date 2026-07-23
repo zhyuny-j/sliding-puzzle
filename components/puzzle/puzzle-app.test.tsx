@@ -40,4 +40,41 @@ describe("PuzzleApp", () => {
       expect(screen.getByTestId(`tile-${position}`)).toBeInTheDocument()
     }
   })
+
+  test("[S12-1] 진행 중 다른 이미지를 클릭하면 확인 다이얼로그가 나타난다", async () => {
+    const user = userEvent.setup()
+    render(<PuzzleApp />)
+
+    await user.click(screen.getByRole("button", { name: PRESET_IMAGES[0].name }))
+    await user.click(screen.getByRole("button", { name: PRESET_IMAGES[1].name }))
+
+    expect(
+      screen.getByText("진행 중인 퍼즐을 포기하고 전환하시겠습니까?")
+    ).toBeInTheDocument()
+  })
+
+  test("[S12-2] 확인을 선택하면 새 이미지로 전환된다", async () => {
+    const user = userEvent.setup()
+    render(<PuzzleApp />)
+
+    await user.click(screen.getByRole("button", { name: PRESET_IMAGES[0].name }))
+    await user.click(screen.getByRole("button", { name: PRESET_IMAGES[1].name }))
+    await user.click(screen.getByRole("button", { name: "확인" }))
+
+    expect(screen.getAllByText(PRESET_IMAGES[1].name).length).toBeGreaterThan(0)
+  })
+
+  test("[S12-3] 취소를 선택하면 원래 이미지가 유지된다", async () => {
+    const user = userEvent.setup()
+    render(<PuzzleApp />)
+
+    await user.click(screen.getByRole("button", { name: PRESET_IMAGES[0].name }))
+    await user.click(screen.getByRole("button", { name: PRESET_IMAGES[1].name }))
+    await user.click(screen.getByRole("button", { name: "취소" }))
+
+    expect(
+      screen.queryByText("진행 중인 퍼즐을 포기하고 전환하시겠습니까?")
+    ).not.toBeInTheDocument()
+    expect(screen.getAllByText(PRESET_IMAGES[0].name).length).toBeGreaterThan(0)
+  })
 })
