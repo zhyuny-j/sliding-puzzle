@@ -29,6 +29,7 @@ export function usePuzzle(image: PuzzleImage | null): UsePuzzleResult {
     image ? generateSolvableShuffle() : []
   )
   const [elapsedMs, setElapsedMs] = React.useState(0)
+  const startedAtRef = React.useRef(0)
   const isSolved = board.length > 0 && isSolvedBoard(board)
 
   React.useEffect(() => {
@@ -38,6 +39,7 @@ export function usePuzzle(image: PuzzleImage | null): UsePuzzleResult {
     } else {
       setBoard(generateSolvableShuffle())
       setElapsedMs(0)
+      startedAtRef.current = Date.now()
     }
   }, [image?.id])
 
@@ -45,7 +47,7 @@ export function usePuzzle(image: PuzzleImage | null): UsePuzzleResult {
     if (!image || isSolved) return
 
     const intervalId = setInterval(() => {
-      setElapsedMs((prev) => prev + 1000)
+      setElapsedMs(Date.now() - startedAtRef.current)
     }, 1000)
 
     return () => clearInterval(intervalId)
@@ -66,6 +68,7 @@ export function usePuzzle(image: PuzzleImage | null): UsePuzzleResult {
     if (!image) return
     setBoard(generateSolvableShuffle())
     setElapsedMs(0)
+    startedAtRef.current = Date.now()
   }, [image])
 
   return { board, elapsedMs, moveTile, isSolved, reset }

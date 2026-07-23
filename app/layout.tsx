@@ -14,7 +14,7 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "내가 원하는 사진으로 퍼즐 만들기",
-  description: "사진을 업로드해서 나만의 4X4 슬라이딩 퍼즐을 만들고 랭킹에 도전하는 서비스",
+  description: "원하는 사진으로 나만의 4X4 슬라이딩 퍼즐을 만들고 랭킹에 도전하는 서비스",
 };
 
 export default function RootLayout({

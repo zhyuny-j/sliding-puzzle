@@ -109,3 +109,34 @@ date: 2026-07-23
 **에피소드**: 최종 Checkpoint에서 spec.md의 End-to-end 검증 절차를 실제 브라우저(Claude in Chrome)로 수동 실행하려고 47~49수짜리 퍼즐 풀이 클릭 루프를 시도했으나 두 차례 모두 45초 타임아웃으로 실패 보고됐다. 이후 상태를 조회해보니 일부(때로는 상당 부분)는 실제로 진행돼 있었다. 다수 스텝을 안정적으로 재현 가능하게 실행하려면 Playwright가 더 적합하다고 판단해, `e2e/sliding-puzzle-e2e-verification.spec.ts`로 전체 7단계를 자동화했다(13.8s에 통과, 훨씬 빠르고 안정적).
 
 **증거**: 동일한 클릭 루프가 Playwright(`sliding-puzzle-e2e-verification.spec.ts`)에서는 13.8초에 안정적으로 통과한 반면, Claude in Chrome의 `javascript_tool` 단일 호출로는 10~49수 루프 모두 최소 두 차례 45초 타임아웃 보고를 겪음.
+
+---
+triggers: [독립 코드 리뷰, setInterval 타이머 drift, localStorage setItem try/catch, 왜곡 검사, distortion check, 테스트 ID 오인용]
+status: verified
+scope: this-repo
+date: 2026-07-23
+---
+## Step 4 독립 코드 리뷰(서브에이전트)가 잡아낸 실제 결함과 "왜곡 인용" 테스트
+
+**지시문**: `/code-review` 스킬이 `disable-model-invocation`으로 직접 호출이 막혀 있으면, general-purpose 서브에이전트에 전체 feature diff(마지막 커밋만이 아니라 `git diff <baseline>..HEAD`)와 왜곡 검사(테스트가 인용한 spec ID의 실제 문구와 단언 내용 대조)를 함께 맡겨 독립성을 확보한다. 이번 리뷰에서 실질적 결함 2건과 왜곡 인용 2건을 찾았다:
+1. `hooks/use-puzzle.ts`의 타이머가 `setInterval` 콜백마다 `+1000`을 더하는 방식이었다 — 브라우저가 백그라운드 탭 스로틀링 등으로 tick을 놓치면 화면 시간이 실제 경과 시간보다 뒤처진다. `Date.now() - startedAtRef.current`로 매 tick마다 실제 경과를 재계산하도록 고쳤다.
+2. `services/*-storage.ts`의 `localStorage.setItem`이 try/catch 없이 호출돼, 용량 초과·프라이빗 브라우징에서 던지면 제출/추가가 조용히 실패한 채로 남았다(읽기 쪽만 이미 try/catch가 있었음). 쓰기도 동일하게 감쌌다.
+3. `puzzle-board.test.tsx`의 `[S6-1][S7]`/`[S11]` 인용 테스트와 `ranking-panel.test.tsx`의 `[S9-3]` 인용 테스트가 실제로는 단순 이벤트 위임(`onTileClick`/`onReset` 호출, 제목 텍스트)만 확인하고 있었다 — 인접성 판정·재셔플·이미지별 랭킹 분리라는 진짜 기준은 각각 `hooks/use-puzzle.test.ts`, `hooks/use-ranking.test.ts`에서 이미 증명되고 있었다. ID 인용을 제거하고 "실제 검증 위치"를 테스트 이름에 주석처럼 남겼다.
+
+**에피소드**: Step 4에서 서브에이전트가 위 4건을 Important/Suggestion으로 보고했고, `scripts/spec-coverage.sh`는 이 왜곡 인용을 잡지 못했다(ID가 "어딘가에" 인용되기만 하면 통과하는 기계적 검사이기 때문) — 사람이(또는 리뷰 에이전트가) 각 인용의 실제 단언 내용을 spec 문구와 대조해야만 드러난다.
+
+**증거**: 수정 후 `bun run test`(73 passed, is-browser.test.ts 추가로 1개 증가), `bun run typecheck`, `bun run build`, `scripts/spec-coverage.sh sliding-puzzle --tests` 모두 통과.
+
+---
+triggers: [Playwright, Test timeout of 30000ms exceeded, test.slow, fullyParallel, 병렬 실행 느려짐, 퍼즐 풀이 E2E 타임아웃]
+status: verified
+scope: this-repo (Playwright fullyParallel:true, 3 workers)
+date: 2026-07-23
+---
+## 퍼즐을 실제로 다 풀어보는 E2E는 기본 30s per-test 타임아웃을 넘기기 쉽다 — 특히 여러 테스트가 병렬로 돌 때
+
+**지시문**: 15-puzzle처럼 수십 번의 실제 클릭으로 끝까지 풀어야 하는 E2E 테스트는 `test.slow()`(기본 타임아웃 3배)를 반드시 붙인다. 단독 실행 시엔 30s 안에 끝나도, `fullyParallel: true`로 다른 테스트와 동시에(여러 워커) 돌 때는 실제 브라우저 클릭 처리 속도가 눈에 띄게 느려져 같은 테스트가 30s를 넘기며 실패할 수 있다 — 앱 버그가 아니라 리소스 경합(동시에 여러 Chromium 인스턴스 + dev 서버)에 따른 순수 타이밍 문제다. "waiting for element to be visible, enabled and stable"로 멈춘 에러 로그만 보고 CSS 애니메이션/렌더링 버그를 의심하기 전에, 실패 시점의 페이지 스냅샷에서 타이머 값(예: "⏱ 00:41")을 먼저 확인한다 — 실제 경과 시간이 비정상적으로 크면 이건 속도 문제지 클릭 로직 문제가 아니다.
+
+**에피소드**: Step 4 리뷰 수정 후 재검증 중 `sliding-puzzle-e2e-verification.spec.ts`(신규, 7단계 통합)가 단독 실행 시 "Test timeout of 30000ms exceeded"로 실패했다 — 실패 스냅샷의 타이머가 "00:41"이어서 클릭 로직이 아니라 단순 속도 문제임을 확인하고 `test.slow()`를 추가해 해결했다. 이어서 3개 e2e 파일을 함께(`fullyParallel`, 3 workers) 돌리자 이번엔 기존 `sliding-puzzle-persistence.spec.ts`(Task 10에서 이미 안정적으로 통과했던 테스트)가 같은 이유로 실패했다 — 동일하게 `test.slow()`를 추가하니 3개 모두 안정적으로 통과했다(20.1s).
+
+**증거**: `test.slow()` 추가 전 단독 실행 실패(00:41 경과 후 30s 타임아웃) → 추가 후 단독 6.4s 통과; 3개 e2e 동시 실행 시 `sliding-puzzle-persistence.spec.ts`에 `test.slow()` 추가 전 실패 → 추가 후 3개 전체 20.1s 통과.

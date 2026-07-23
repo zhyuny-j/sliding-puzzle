@@ -90,6 +90,8 @@ async function solvePuzzle(page: import("@playwright/test").Page) {
 }
 
 test("spec.md End-to-end 검증 절차 (S1→S2→S6/S8→S9→S11→S3→S13)", async ({ page }) => {
+  test.slow() // 7단계 전체를 한 흐름으로 실행하며 퍼즐을 두 번(완성+Reset 후) 다루므로 기본 30s 예산보다 여유가 필요하다
+
   // 1. 서비스 첫 진입 → 타이틀과 왼쪽 기본 프리셋 목록, 빈 랭킹 안내가 보인다 (S1)
   await page.goto("/")
   await page.evaluate(() => window.localStorage.clear())

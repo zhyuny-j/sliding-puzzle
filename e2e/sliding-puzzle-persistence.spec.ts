@@ -75,6 +75,8 @@ function solve(startBoard: number[]): number[] {
 test("[S13-1][S13-2][INV-3] 이미지 추가 후 퍼즐을 완성하고 랭킹을 남기면, 새로고침 후에도 이미지 목록과 랭킹이 유지된다", async ({
   page,
 }) => {
+  test.slow() // 퍼즐을 실제로 풀이하는 클릭 시퀀스가 많아 병렬 실행 시 기본 30s 예산을 넘길 수 있다
+
   await page.goto("/")
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()

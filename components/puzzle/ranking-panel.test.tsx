@@ -24,7 +24,7 @@ describe("RankingPanel", () => {
     expect(items[1]).toHaveTextContent("00:41")
   })
 
-  test("[S9-3] 이미지 이름이 제목에 표시된다", () => {
+  test("이미지 이름이 제목에 표시된다 (이미지별 랭킹 분리는 use-ranking에서 검증)", () => {
     render(<RankingPanel imageName="산" rankings={[]} />)
     expect(screen.getByText("랭킹 - 산")).toBeInTheDocument()
   })

@@ -56,7 +56,7 @@ describe("PuzzleBoard", () => {
     expect(screen.getByLabelText("경과 시간")).toHaveTextContent("00:47")
   })
 
-  test("[S6-1][S7] 타일을 클릭하면 onTileClick에 해당 위치를 전달한다", async () => {
+  test("타일을 클릭하면 onTileClick에 해당 위치를 전달한다 (인접성 판정은 use-puzzle에서 검증)", async () => {
     const user = userEvent.setup()
     const board = createSolvedBoard()
     const onTileClick = vi.fn()
@@ -69,7 +69,7 @@ describe("PuzzleBoard", () => {
     expect(onTileClick).toHaveBeenCalledWith(3)
   })
 
-  test("[S11] Reset 버튼을 클릭하면 onReset이 호출된다", async () => {
+  test("Reset 버튼을 클릭하면 onReset이 호출된다 (실제 재셔플·타이머 초기화는 use-puzzle에서 검증)", async () => {
     const user = userEvent.setup()
     const onReset = vi.fn()
     const board = createSolvedBoard()

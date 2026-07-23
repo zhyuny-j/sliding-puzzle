@@ -1,11 +1,8 @@
+import { isBrowser } from "@/lib/is-browser"
 import type { RankingEntry } from "@/types/puzzle"
 
 const STORAGE_PREFIX = "sliding-puzzle:rankings:"
 const MAX_RANKING_ENTRIES = 10
-
-function isBrowser(): boolean {
-  return typeof window !== "undefined"
-}
 
 export function getRankings(imageId: string): RankingEntry[] {
   if (!isBrowser()) return []
@@ -26,7 +23,11 @@ export function addRanking(imageId: string, entry: RankingEntry): RankingEntry[]
     .slice(0, MAX_RANKING_ENTRIES)
 
   if (isBrowser()) {
-    window.localStorage.setItem(STORAGE_PREFIX + imageId, JSON.stringify(next))
+    try {
+      window.localStorage.setItem(STORAGE_PREFIX + imageId, JSON.stringify(next))
+    } catch {
+      // localStorage 쓰기 실패(용량 초과, 프라이빗 브라우징 등)해도 화면에는 정렬된 랭킹을 보여준다
+    }
   }
 
   return next
