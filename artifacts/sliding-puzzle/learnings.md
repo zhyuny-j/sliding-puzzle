@@ -67,3 +67,31 @@ date: 2026-07-23
 **에피소드**: Task 10 E2E(`e2e/sliding-puzzle-persistence.spec.ts`)에서 셔플 결과를 고정하려고 `Math.random` 스텁 + 미리 계산한 47수 이동 시퀀스를 하드코딩했으나, 매 실행마다 `tile-0`이 끝내 나타나지 않고 타임아웃됐다. 디버그 로그로 `[HMR] connected`가 예상보다 한 번 더 찍히는 것과, add-image 폼 필드는 비어 있는데(성공) 화면은 빈 상태로 돌아간 것을 확인해 리마운트로 인한 state 유실을 의심했다. 스텁을 제거하고 실제 렌더된 보드를 읽어 그때그때 IDA*로 풀이하는 방식으로 바꾸자 즉시 통과했다(8.7s).
 
 **증거**: `sliding-puzzle-persistence.spec.ts`의 동적 solve() 방식으로 `[S13-1][S13-2][INV-3]` 테스트 1개 통과; `bun run test`(72 passed), `bun run typecheck`, `scripts/spec-coverage.sh sliding-puzzle --tests` 전체 통과.
+
+---
+triggers: [Turbopack, .next 캐시, CSS 변수 반영 안 됨, :root, @theme inline, HMR CSS 안 먹음, next dev 재시작]
+status: verified
+scope: this-repo (Next.js 16.1.6, Turbopack dev)
+date: 2026-07-23
+---
+## `app/globals.css`의 `:root`/`.dark` CSS 변수를 수정해도 Turbopack dev 서버가 오래된 값을 계속 서빙할 수 있다 — `.next` 캐시를 지우고 재시작해야 한다
+
+**지시문**: `globals.css`에서 `:root`/`.dark`의 CSS 커스텀 프로퍼티(`--primary` 등)를 바꿨는데 브라우저에 반영되지 않으면(리로드해도 동일), 먼저 서빙되는 CSS 청크를 직접 `curl`로 받아 실제 값이 바뀌었는지 확인한다. 바뀌지 않았다면 dev 서버를 재시작하는 것만으로는 부족할 수 있다 — `.next` 디렉터리를 통째로 삭제(`rm -rf .next`)한 뒤 재시작해야 Turbopack이 해당 CSS를 다시 컴파일한다. HMR이 살아있는 상태에서의 일반적인 컴포넌트/로직 변경은 즉시 반영되지만, 이 세션에서는 `:root` 레벨 CSS 변수 변경이 캐시된 청크 해시(`[root-of-the-server]__*.css`)로 재사용되어 반영되지 않는 것을 관찰했다.
+
+**에피소드**: Task 11에서 레트로 팔레트로 `--primary`를 마젠타(`oklch(0.68 0.24 340)`)로 바꿨지만, 브라우저에서는 계속 원래 인디고 색이 보였다. `getComputedStyle`로 확인해도 이전 값이었다. 서빙되는 CSS 청크를 `curl`로 직접 받아보니 옛 값이 그대로 있었다 — dev 서버를 단순 재시작(`preview_stop`+`preview_start`)해도 동일 청크 해시가 재사용되며 변하지 않았고, `.next`를 삭제한 뒤에야 새 값이 반영됐다.
+
+**증거**: `curl .../[root-of-the-server]__4baccfb0._.css`가 `.next` 삭제 전에는 `--primary: #432dd7`, 삭제 후 재시작하면 `--primary: #f147c6`로 바뀌는 것을 확인.
+
+---
+triggers: [next/font/google, 한글 폰트, Press_Start_2P, 픽셀 폰트, subsets, Hangul, font fallback, letter-spacing 이상, 폰트 metrics]
+status: verified
+scope: this-repo (next/font/google, Next.js 16.1.6)
+date: 2026-07-23
+---
+## 라틴 전용 웹폰트를 한글 텍스트에 적용하면 폰트가 조용히 fallback되면서 글자 간격이 깨진다 — next/font/google `subsets`의 타입이 허용하는 값이 실제 스크립트 지원과 무관할 수 있다
+
+**지시문**: 레트로/픽셀 느낌을 내려고 `Press_Start_2P` 같은 라틴 전용 디스플레이 폰트를 한글이 포함된 heading에 적용하지 않는다 — 해당 폰트에 한글 글리프가 없으면 브라우저가 문자 단위로 폴백 폰트를 쓰면서도 원래 폰트의 넓은 advance width 메트릭을 참조해, 단어 사이에 비정상적으로 큰 공백이 생긴다(겉보기엔 `letter-spacing` 버그처럼 보이지만 실제로는 font-fallback 메트릭 불일치). 한글이 포함된 프로젝트에서 게임/레트로 톤의 heading 폰트가 필요하면 `Do_Hyeon`, `Black_Han_Sans`처럼 실제로 한글 글리프를 제공하는 Google Fonts를 쓴다. 단, next/font/google의 TypeScript 타입상 `subsets` 허용값이 `["latin"]`뿐인 한글 전용 폰트도 있다(`Do_Hyeon` 확인) — 이 타입은 실제 스크립트 커버리지와 무관하므로 `subsets: ["latin"]`으로 지정해도 한글이 정상 렌더링되는지 반드시 실제 브라우저로 확인한다.
+
+**에피소드**: Task 11에서 타이틀에 `Press_Start_2P`를 `--font-heading`으로 적용했더니, 실제 브라우저 스크린샷에서 "내가 원하는 사진으로 퍼즐 만들기"가 단어마다 큰 간격이 뜬 채로 깨져 보였다. `Black_Han_Sans({subsets:["korean"]})`로 바꾸려 하자 `tsc`가 `Type '"korean"' is not assignable to type '"latin"'` 에러를 냈고, `Do_Hyeon`도 동일했다 — 두 폰트 모두 next/font/google 타입 선언상 `subsets`가 `["latin"]`만 허용했다. `Do_Hyeon({subsets:["latin"]})`으로 지정하고 실제 브라우저에서 확인하니 한글이 정상적인 간격으로 렌더링됐다(타입의 "latin" 라벨이 실제 글리프 커버리지를 반영하지 않음).
+
+**증거**: Claude in Chrome 스크린샷으로 `Press_Start_2P` 적용 시 "내가 원하는 사진으로 퍼즐 만들기"의 단어 간격이 비정상적으로 벌어진 것을 확인; `Do_Hyeon`으로 교체 후 동일 화면에서 정상 렌더링 확인. `bun run typecheck`/`bun run build` 모두 통과.

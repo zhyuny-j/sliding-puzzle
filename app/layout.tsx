@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-import { Inter, Outfit, Oxanium } from "next/font/google";
+import { Do_Hyeon, Outfit } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const oxaniumHeading = Oxanium({subsets:['latin'],variable:'--font-heading'});
+const arcadeHeading = Do_Hyeon({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-heading",
+});
 
-const outfit = Outfit({subsets:['latin'],variable:'--font-sans'});
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Kanban Todo",
-  description: "Kanban board application",
+  title: "내가 원하는 사진으로 퍼즐 만들기",
+  description: "사진을 업로드해서 나만의 4X4 슬라이딩 퍼즐을 만들고 랭킹에 도전하는 서비스",
 };
 
 export default function RootLayout({
@@ -19,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning className={cn("font-sans", outfit.variable, oxaniumHeading.variable)}>
-      <body className={`${outfit.variable} antialiased`}>
+    <html lang="ko" suppressHydrationWarning className={cn("font-sans", outfit.variable, arcadeHeading.variable)}>
+      <body className={cn(outfit.variable, "antialiased", "retro-scanlines")}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
         </ThemeProvider>

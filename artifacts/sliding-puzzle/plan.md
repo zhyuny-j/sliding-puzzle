@@ -261,7 +261,9 @@ None (백엔드·외부 서비스 없음, 브라우저 `localStorage`만 사용)
 
 ---
 
-### Task 11: 레트로 게임 스타일 테마 적용
+### Task 11: 레트로 게임 스타일 테마 적용 ✅ 완료
+
+**검증 방식 참고**: `artifacts/sliding-puzzle/evidence/task-11.png` 파일 저장 대신, 세션 내 실제 브라우저(Claude in Chrome)로 확인한 스크린샷을 사용자에게 인라인으로 제시했다 — 이 harness에서는 Browser MCP 스크린샷이 "pane not displayed"로 실패하고, Claude in Chrome의 `save_to_disk`도 로컬 파일 경로를 반환하지 않아 디스크 저장 경로를 확인할 수 없었다.
 
 - **담당 판정 기준**: 없음 (spec 범위에 명시된 시각 요구사항이나 개별 시나리오 ID가 없음)
 - **크기**: M (3~5 파일)
