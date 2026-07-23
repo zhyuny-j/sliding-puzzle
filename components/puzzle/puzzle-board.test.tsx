@@ -68,4 +68,15 @@ describe("PuzzleBoard", () => {
 
     expect(onTileClick).toHaveBeenCalledWith(3)
   })
+
+  test("[S11] Reset 버튼을 클릭하면 onReset이 호출된다", async () => {
+    const user = userEvent.setup()
+    const onReset = vi.fn()
+    const board = createSolvedBoard()
+    render(<PuzzleBoard image={image} board={board} elapsedMs={0} onReset={onReset} />)
+
+    await user.click(screen.getByRole("button", { name: "Reset" }))
+
+    expect(onReset).toHaveBeenCalled()
+  })
 })

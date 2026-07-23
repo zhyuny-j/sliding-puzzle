@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { RefreshIcon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -13,9 +15,10 @@ export interface SuccessPanelProps {
   image: PuzzleImage
   elapsedMs: number
   onSubmit: (nickname: string) => void
+  onReset?: () => void
 }
 
-export function SuccessPanel({ image, elapsedMs, onSubmit }: SuccessPanelProps) {
+export function SuccessPanel({ image, elapsedMs, onSubmit, onReset }: SuccessPanelProps) {
   const [nickname, setNickname] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const [submitted, setSubmitted] = React.useState(false)
@@ -64,6 +67,10 @@ export function SuccessPanel({ image, elapsedMs, onSubmit }: SuccessPanelProps) 
           </FieldGroup>
         </form>
       )}
+      <Button type="button" variant="outline" onClick={() => onReset?.()}>
+        <HugeiconsIcon icon={RefreshIcon} data-icon="inline-start" />
+        Reset
+      </Button>
     </div>
   )
 }

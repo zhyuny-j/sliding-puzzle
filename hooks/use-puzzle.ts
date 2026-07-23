@@ -10,6 +10,7 @@ export interface UsePuzzleResult {
   elapsedMs: number
   moveTile: (position: number) => void
   isSolved: boolean
+  reset: () => void
 }
 
 function isAdjacent(a: number, b: number): boolean {
@@ -61,5 +62,11 @@ export function usePuzzle(image: PuzzleImage | null): UsePuzzleResult {
     })
   }, [])
 
-  return { board, elapsedMs, moveTile, isSolved }
+  const reset = React.useCallback(() => {
+    if (!image) return
+    setBoard(generateSolvableShuffle())
+    setElapsedMs(0)
+  }, [image])
+
+  return { board, elapsedMs, moveTile, isSolved, reset }
 }

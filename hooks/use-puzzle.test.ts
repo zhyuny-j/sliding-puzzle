@@ -155,4 +155,44 @@ describe("usePuzzle", () => {
 
     expect(result.current.board).toEqual(solvedBoard)
   })
+
+  test("[S11-1][S11-2] 진행 중에 reset을 호출하면 타이머가 0으로 초기화되고 계속 흐른다", () => {
+    const { result } = renderHook(() => usePuzzle(image))
+
+    act(() => {
+      vi.advanceTimersByTime(4000)
+    })
+    expect(result.current.elapsedMs).toBe(4000)
+
+    act(() => {
+      result.current.reset()
+    })
+    expect(result.current.elapsedMs).toBe(0)
+
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(result.current.elapsedMs).toBe(1000)
+  })
+
+  test("[S11-1][S11-2][S11-3] 완성된 상태에서 reset을 호출하면 다시 섞이고 조작 가능해진다", () => {
+    const { result } = renderHook(() => usePuzzle(image))
+
+    act(() => {
+      result.current.moveTile(15)
+    })
+    expect(result.current.isSolved).toBe(true)
+
+    act(() => {
+      result.current.reset()
+    })
+
+    expect(result.current.elapsedMs).toBe(0)
+    expect(result.current.isSolved).toBe(false)
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(result.current.elapsedMs).toBe(2000)
+  })
 })

@@ -13,7 +13,7 @@ import { SuccessPanel } from "./success-panel"
 
 export function PuzzleApp() {
   const [selectedImage, setSelectedImage] = React.useState<PuzzleImage | null>(null)
-  const { board, elapsedMs, moveTile, isSolved } = usePuzzle(selectedImage)
+  const { board, elapsedMs, moveTile, isSolved, reset } = usePuzzle(selectedImage)
   const { rankings, submitRanking } = useRanking(selectedImage?.id ?? null)
 
   return (
@@ -49,6 +49,7 @@ export function PuzzleApp() {
                 image={selectedImage}
                 elapsedMs={elapsedMs}
                 onSubmit={(nickname) => submitRanking(nickname, elapsedMs)}
+                onReset={reset}
               />
             ) : selectedImage ? (
               <PuzzleBoard
@@ -56,6 +57,7 @@ export function PuzzleApp() {
                 board={board}
                 elapsedMs={elapsedMs}
                 onTileClick={moveTile}
+                onReset={reset}
               />
             ) : (
               <p className="text-sm text-muted-foreground">이미지를 선택해주세요</p>

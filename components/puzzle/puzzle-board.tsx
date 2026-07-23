@@ -1,7 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { RefreshIcon } from "@hugeicons/core-free-icons"
 
+import { Button } from "@/components/ui/button"
 import { BLANK, BOARD_SIZE } from "@/lib/puzzle-shuffle"
 import { formatElapsedTime } from "@/lib/format-time"
 import type { PuzzleImage } from "@/types/puzzle"
@@ -11,6 +14,7 @@ export interface PuzzleBoardProps {
   board: number[]
   elapsedMs: number
   onTileClick?: (position: number) => void
+  onReset?: () => void
 }
 
 function getTileContainerStyle(position: number): React.CSSProperties {
@@ -42,7 +46,13 @@ function getTileLayerStyle(value: number, imageUrl: string): React.CSSProperties
   }
 }
 
-export function PuzzleBoard({ image, board, elapsedMs, onTileClick }: PuzzleBoardProps) {
+export function PuzzleBoard({
+  image,
+  board,
+  elapsedMs,
+  onTileClick,
+  onReset,
+}: PuzzleBoardProps) {
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -67,6 +77,12 @@ export function PuzzleBoard({ image, board, elapsedMs, onTileClick }: PuzzleBoar
             )}
           </button>
         ))}
+      </div>
+      <div className="flex justify-center">
+        <Button type="button" variant="outline" onClick={() => onReset?.()}>
+          <HugeiconsIcon icon={RefreshIcon} data-icon="inline-start" />
+          Reset
+        </Button>
       </div>
     </div>
   )

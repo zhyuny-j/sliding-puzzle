@@ -60,4 +60,16 @@ describe("SuccessPanel", () => {
     expect(screen.getByText("제출 완료")).toBeInTheDocument()
     expect(screen.queryByLabelText("아이디")).not.toBeInTheDocument()
   })
+
+  test("[S11-3] Reset 버튼이 있고 클릭하면 onReset이 호출된다", async () => {
+    const user = userEvent.setup()
+    const onReset = vi.fn()
+    render(
+      <SuccessPanel image={image} elapsedMs={0} onSubmit={vi.fn()} onReset={onReset} />
+    )
+
+    await user.click(screen.getByRole("button", { name: "Reset" }))
+
+    expect(onReset).toHaveBeenCalled()
+  })
 })
