@@ -140,3 +140,17 @@ date: 2026-07-23
 **에피소드**: Step 4 리뷰 수정 후 재검증 중 `sliding-puzzle-e2e-verification.spec.ts`(신규, 7단계 통합)가 단독 실행 시 "Test timeout of 30000ms exceeded"로 실패했다 — 실패 스냅샷의 타이머가 "00:41"이어서 클릭 로직이 아니라 단순 속도 문제임을 확인하고 `test.slow()`를 추가해 해결했다. 이어서 3개 e2e 파일을 함께(`fullyParallel`, 3 workers) 돌리자 이번엔 기존 `sliding-puzzle-persistence.spec.ts`(Task 10에서 이미 안정적으로 통과했던 테스트)가 같은 이유로 실패했다 — 동일하게 `test.slow()`를 추가하니 3개 모두 안정적으로 통과했다(20.1s).
 
 **증거**: `test.slow()` 추가 전 단독 실행 실패(00:41 경과 후 30s 타임아웃) → 추가 후 단독 6.4s 통과; 3개 e2e 동시 실행 시 `sliding-puzzle-persistence.spec.ts`에 `test.slow()` 추가 전 실패 → 추가 후 3개 전체 20.1s 통과.
+
+---
+triggers: [group-hover, hidden, display:none, 호버 버튼, CDP 클릭 실패, 합성 마우스 클릭, 터치 디바이스 hover 없음, group-focus-within]
+status: verified
+scope: this-repo (Tailwind group-hover 패턴)
+date: 2026-07-23
+---
+## `hidden ... group-hover:flex`로 구현한 호버 전용 삭제 버튼은 (1) 자동화 도구의 합성 클릭이 좌표를 못 맞추기 쉽고 (2) 터치 디바이스에서는 아예 노출되지 않는다
+
+**지시문**: 마우스 오버레이로만 나타나는 작은 아이콘 버튼(`hidden group-hover:flex` 패턴)을 real-browser 자동화(Claude in Chrome의 `computer` hover+click)로 검증할 때, hover 후 좌표 클릭이나 `find`로 얻은 ref 클릭이 실패해도 즉시 "기능이 안 된다"고 단정하지 않는다 — `element.click()`을 JS로 직접 호출해 핸들러 자체가 정상 동작하는지부터 분리해서 확인한다(핸들러가 정상이면 자동화 도구의 좌표 정밀도 문제일 뿐 앱 결함이 아니다). 별개로, `group-hover:flex`만 쓰면 hover가 없는 터치 디바이스에서는 그 버튼이 영원히 노출되지 않으므로 `group-focus-within:flex`도 함께 걸어 최소한 키보드 포커스로는 도달 가능하게 한다(터치 전용 대안이 완전한 해법은 아니지만 최소 접근성 확보).
+
+**에피소드**: Task 12(이미지 삭제 호버 버튼)에서 Claude in Chrome으로 hover 후 좌표 클릭 2회, `find` ref 클릭 1회가 모두 "이미지가 그대로 남음"으로 실패했다. `btn.click()`을 JS로 직접 호출하자 즉시 삭제됐다(`stillThere: false`) — 핸들러·hooks·services 로직은 모두 정상이었고, 자동화 도구가 작은(14~20px) hover-전용 요소의 실제 화면 좌표를 정확히 맞추지 못한 것이 원인이었다. 이 발견을 계기로 `group-focus-within:flex`를 추가해 키보드 접근성도 보강했다.
+
+**증거**: `getComputedStyle(btn).display === "none"`인 상태에서도 `btn.click()`으로 즉시 삭제 확인(`stillThere:false`); 단위 테스트(`image-library-grid.test.tsx`, `use-image-library.test.ts`)와 통합 테스트(`puzzle-app.test.tsx`의 `[S14-1]`/`[S15]`)가 RTL의 `userEvent.click`으로 동일 버튼을 문제없이 클릭해 전부 통과.

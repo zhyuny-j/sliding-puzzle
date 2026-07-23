@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest"
-import { addImage, getAddedImages } from "./image-library-storage"
+import { addImage, getAddedImages, removeImage } from "./image-library-storage"
 import type { PuzzleImage } from "@/types/puzzle"
 
 function image(id: string, name: string): PuzzleImage {
@@ -25,5 +25,15 @@ describe("image-library-storage", () => {
     addImage(image("img-1", "바다 풍경"))
     const result = addImage(image("img-2", "산"))
     expect(result.map((i) => i.name)).toEqual(["바다 풍경", "산"])
+  })
+
+  test("[S14-1] removeImage는 해당 이미지를 목록에서 제거하고 반환한다", () => {
+    addImage(image("img-1", "바다 풍경"))
+    addImage(image("img-2", "산"))
+
+    const result = removeImage("img-1")
+
+    expect(result.map((i) => i.id)).toEqual(["img-2"])
+    expect(getAddedImages().map((i) => i.id)).toEqual(["img-2"])
   })
 })

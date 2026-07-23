@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest"
-import { addRanking, getRankings } from "./ranking-storage"
+import { addRanking, getRankings, removeRankings } from "./ranking-storage"
 import type { RankingEntry } from "@/types/puzzle"
 
 function entry(playerId: string, timeMs: number): RankingEntry {
@@ -34,6 +34,16 @@ describe("ranking-storage", () => {
     addRanking("img-2", entry("dave", 10_000))
 
     expect(getRankings("img-1").map((r) => r.playerId)).toEqual(["alice"])
+    expect(getRankings("img-2").map((r) => r.playerId)).toEqual(["dave"])
+  })
+
+  test("[S14-2] removeRankings는 해당 이미지의 기록을 모두 지운다", () => {
+    addRanking("img-1", entry("alice", 32_000))
+    addRanking("img-2", entry("dave", 10_000))
+
+    removeRankings("img-1")
+
+    expect(getRankings("img-1")).toEqual([])
     expect(getRankings("img-2").map((r) => r.playerId)).toEqual(["dave"])
   })
 

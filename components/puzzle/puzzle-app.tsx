@@ -8,6 +8,7 @@ import { usePuzzle } from "@/hooks/use-puzzle"
 import { useRanking } from "@/hooks/use-ranking"
 import type { PuzzleImage } from "@/types/puzzle"
 import { AddImageForm } from "./add-image-form"
+import { ImageLibraryGrid } from "./image-library-grid"
 import { PuzzleBoard } from "./puzzle-board"
 import { RankingPanel } from "./ranking-panel"
 import { SuccessPanel } from "./success-panel"
@@ -16,7 +17,7 @@ import { SwitchConfirmDialog } from "./switch-confirm-dialog"
 export function PuzzleApp() {
   const [selectedImage, setSelectedImage] = React.useState<PuzzleImage | null>(null)
   const [pendingImage, setPendingImage] = React.useState<PuzzleImage | null>(null)
-  const { images, addImageFromUrl } = useImageLibrary()
+  const { images, addImageFromUrl, removeImage } = useImageLibrary()
   const { board, elapsedMs, moveTile, isSolved, reset } = usePuzzle(selectedImage)
   const { rankings, submitRanking } = useRanking(selectedImage?.id ?? null)
 
@@ -45,6 +46,13 @@ export function PuzzleApp() {
     setPendingImage(null)
   }
 
+  function handleRemoveImage(imageId: string) {
+    removeImage(imageId)
+    if (selectedImage?.id === imageId) {
+      setSelectedImage(null)
+    }
+  }
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
       <h1 className="text-xl font-bold">내가 원하는 사진으로 퍼즐 만들기</h1>
@@ -55,19 +63,12 @@ export function PuzzleApp() {
             <CardTitle>기본 퍼즐</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <div className="grid grid-cols-3 gap-2">
-              {images.map((image) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  aria-label={image.name}
-                  onClick={() => handleSelectImage(image)}
-                  data-selected={selectedImage?.id === image.id}
-                  className="aspect-square rounded-md border bg-cover bg-center data-[selected=true]:ring-2 data-[selected=true]:ring-ring"
-                  style={{ backgroundImage: `url(${image.url})` }}
-                />
-              ))}
-            </div>
+            <ImageLibraryGrid
+              images={images}
+              selectedImageId={selectedImage?.id ?? null}
+              onSelectImage={handleSelectImage}
+              onRemoveImage={handleRemoveImage}
+            />
             <AddImageForm onAddImage={handleAddImage} />
           </CardContent>
         </Card>

@@ -67,6 +67,7 @@ None (백엔드·외부 서비스 없음, 브라우저 `localStorage`만 사용)
 | `components/component-example.tsx` | Delete | 2 |
 | `components/example.tsx` | Delete | 2 |
 | `e2e/sliding-puzzle-persistence.spec.ts` | New | 10 |
+| `components/puzzle/image-library-grid.tsx` | New | 12 |
 
 ## Tasks
 
@@ -282,6 +283,36 @@ None (백엔드·외부 서비스 없음, 브라우저 `localStorage`만 사용)
 - [x] spec.md의 **End-to-end 검증** 절차를 실행하고, 통과한 판정 기준의 체크박스를 spec.md에서 켠다 (체크는 실행 증거로만 켠다)
   - 증거: `e2e/sliding-puzzle-persistence.spec.ts`(S13-1/S13-2/INV-3 중심)에 이어, spec.md의 7단계 절차를 그대로 순서대로 실행하는 `e2e/sliding-puzzle-e2e-verification.spec.ts`를 추가해 S1→S2→S6/S8→S9→S11→S3→S13을 한 흐름으로 통과 확인 (13.8s). `bun run test`(72 passed), `bun run typecheck`, `scripts/spec-coverage.sh sliding-puzzle --tests` 모두 통과.
   - S5/INV-1 셔플 checkbox 정정: `## 불변 규칙` 섹션의 INV-1은 이미 Task 1에서 체크돼 있었으나, S5 시나리오 안의 동일 항목 체크박스가 누락돼 있어 함께 켰다(같은 기준의 중복 표기, Task 1의 `puzzle-shuffle.test.ts` 200회 반복 검증으로 이미 증명됨).
+
+---
+
+### Task 12: 추가한 이미지 삭제 (호버 삭제 버튼) ✅ 완료
+
+Human Review 이후 사용자 요청으로 추가된 Task. 결정 사항(사용자 확인 완료):
+- 삭제 대상은 URL로 추가한 이미지만 — 기본 프리셋은 삭제 불가
+- 삭제 시 랭킹 기록도 함께 삭제
+- 삭제 대상이 현재 선택 중인 이미지면 빈 상태로 전환
+
+- **담당 판정 기준**: S14-1, S14-2, S14-3, S15
+- **크기**: M (3~5 파일)
+- **의존성**: Task 6(랭킹 저장), Task 8(이미지 저장)
+- **참조**:
+  - shadcn (기존 아이콘 라이브러리 `@hugeicons/react` 재사용 — `CancelCircleIcon`)
+- **구현 대상**:
+  - `services/ranking-storage.ts` (Modify: `removeRankings(imageId)` 추가)
+  - `services/image-library-storage.ts` (Modify: `removeImage(imageId)` 추가)
+  - `hooks/use-image-library.ts` (Modify: `removeImage(imageId)` — 이미지 삭제 + 해당 이미지 랭킹 삭제를 한 번에 처리)
+  - `components/puzzle/image-library-grid.tsx` (New: 기존 puzzle-app.tsx의 이미지 그리드를 분리 — 호버 시 나타나는 삭제 버튼, `isPreset`이면 삭제 버튼 미표시)
+  - `components/puzzle/puzzle-app.tsx` (Modify: `ImageLibraryGrid` 사용, 삭제된 이미지가 선택 중이었다면 `selectedImage`를 `null`로)
+- **검증**: `bun run test -- ranking-storage image-library-storage use-image-library image-library-grid puzzle-app` (`[S14-1]`~`[S14-3]`, `[S15]` 인용)
+
+---
+
+### Checkpoint: Task 12 이후 ✅ 완료
+- [x] 모든 테스트 통과: `bun run test` (81 passed)
+- [x] 빌드 성공: `bun run build`
+- [x] 커버리지 검사 통과: `scripts/spec-coverage.sh sliding-puzzle --tests`
+- [x] 추가한 이미지에 마우스를 올려 삭제하는 흐름이 end-to-end로 동작 — 실제 브라우저(Claude in Chrome)에서 호버 시 삭제 버튼이 나타남을 스크린샷으로 확인했고, 클릭 핸들러가 이미지·랭킹을 모두 지우는 것도 확인했다. 자동화 도구의 합성 마우스 클릭이 작은 호버-전용 버튼의 좌표를 정확히 못 맞혀 두 차례 실패했으나, `button.click()` 직접 호출로 핸들러 자체는 정상 동작함을 확인 — 이는 자동화 좌표 정밀도 문제이지 기능 결함이 아니다(단위/통합 테스트도 모두 통과).
 
 ## 미결정 항목
 

@@ -26,3 +26,15 @@ export function addImage(image: PuzzleImage): PuzzleImage[] {
   }
   return next
 }
+
+export function removeImage(imageId: string): PuzzleImage[] {
+  const next = getAddedImages().filter((image) => image.id !== imageId)
+  if (isBrowser()) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    } catch {
+      // localStorage 쓰기 실패(용량 초과, 프라이빗 브라우징 등)해도 화면에는 삭제된 목록을 보여준다
+    }
+  }
+  return next
+}

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { useImageLibrary } from "./use-image-library"
 import { PRESET_IMAGES } from "@/config/puzzle-presets"
+import { addRanking, getRankings } from "@/services/ranking-storage"
 
 class FakeImage {
   onload: (() => void) | null = null
@@ -72,5 +73,26 @@ describe("useImageLibrary", () => {
 
     expect(addResult?.ok).toBe(false)
     expect(result.current.images).toEqual(PRESET_IMAGES)
+  })
+
+  test("[S14-1][S14-2] removeImage는 목록에서 이미지를 지우고 그 랭킹도 함께 지운다", async () => {
+    const { result } = renderHook(() => useImageLibrary())
+
+    let addResult: Awaited<ReturnType<typeof result.current.addImageFromUrl>> | undefined
+    await act(async () => {
+      addResult = await result.current.addImageFromUrl("https://example.com/sea.jpg", "바다 풍경")
+    })
+    const addedId = addResult && addResult.ok ? addResult.image.id : undefined
+    expect(addedId).toBeTruthy()
+    addRanking(addedId!, { playerId: "alice", timeMs: 10_000, recordedAt: 1 })
+
+    act(() => {
+      result.current.removeImage(addedId!)
+    })
+
+    await waitFor(() => {
+      expect(result.current.images).toEqual(PRESET_IMAGES)
+    })
+    expect(getRankings(addedId!)).toEqual([])
   })
 })

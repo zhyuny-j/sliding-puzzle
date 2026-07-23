@@ -3,7 +3,8 @@
 import * as React from "react"
 
 import { PRESET_IMAGES } from "@/config/puzzle-presets"
-import { addImage, getAddedImages } from "@/services/image-library-storage"
+import { addImage, getAddedImages, removeImage as removeStoredImage } from "@/services/image-library-storage"
+import { removeRankings } from "@/services/ranking-storage"
 import type { PuzzleImage } from "@/types/puzzle"
 
 export type AddImageResult =
@@ -13,6 +14,7 @@ export type AddImageResult =
 export interface UseImageLibraryResult {
   images: PuzzleImage[]
   addImageFromUrl: (url: string, name: string) => Promise<AddImageResult>
+  removeImage: (imageId: string) => void
 }
 
 function loadsSuccessfully(url: string): Promise<boolean> {
@@ -52,5 +54,10 @@ export function useImageLibrary(): UseImageLibraryResult {
     []
   )
 
-  return { images, addImageFromUrl }
+  const removeImage = React.useCallback((imageId: string) => {
+    setAddedImages(removeStoredImage(imageId))
+    removeRankings(imageId)
+  }, [])
+
+  return { images, addImageFromUrl, removeImage }
 }

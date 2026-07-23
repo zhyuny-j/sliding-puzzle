@@ -32,3 +32,12 @@ export function addRanking(imageId: string, entry: RankingEntry): RankingEntry[]
 
   return next
 }
+
+export function removeRankings(imageId: string): void {
+  if (!isBrowser()) return
+  try {
+    window.localStorage.removeItem(STORAGE_PREFIX + imageId)
+  } catch {
+    // localStorage 접근 실패해도 화면 상태는 이미지 삭제 흐름을 계속 진행한다
+  }
+}

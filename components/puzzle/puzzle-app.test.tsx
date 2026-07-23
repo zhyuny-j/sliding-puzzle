@@ -117,5 +117,37 @@ describe("PuzzleApp", () => {
       expect(screen.getAllByText("바다 풍경").length).toBeGreaterThan(0)
       expect(screen.getByLabelText("경과 시간")).toHaveTextContent("00:00")
     })
+
+    test("[S14-1] 추가한 이미지를 삭제하면 목록에서 사라진다", async () => {
+      const user = userEvent.setup()
+      render(<PuzzleApp />)
+
+      await user.type(screen.getByLabelText("이미지 URL"), "https://example.com/sea.jpg")
+      await user.type(screen.getByLabelText("이름"), "바다 풍경")
+      await user.click(screen.getByRole("button", { name: "추가" }))
+      await waitFor(() => {
+        expect(screen.getByTestId("tile-0")).toBeInTheDocument()
+      })
+
+      await user.click(screen.getByRole("button", { name: "바다 풍경 삭제" }))
+
+      expect(screen.queryByRole("button", { name: "바다 풍경" })).not.toBeInTheDocument()
+    })
+
+    test("[S15] 선택 중인 이미지를 삭제하면 빈 상태로 전환된다", async () => {
+      const user = userEvent.setup()
+      render(<PuzzleApp />)
+
+      await user.type(screen.getByLabelText("이미지 URL"), "https://example.com/sea.jpg")
+      await user.type(screen.getByLabelText("이름"), "바다 풍경")
+      await user.click(screen.getByRole("button", { name: "추가" }))
+      await waitFor(() => {
+        expect(screen.getByTestId("tile-0")).toBeInTheDocument()
+      })
+
+      await user.click(screen.getByRole("button", { name: "바다 풍경 삭제" }))
+
+      expect(screen.getByText("이미지를 선택해주세요")).toBeInTheDocument()
+    })
   })
 })
