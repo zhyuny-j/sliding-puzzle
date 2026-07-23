@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { act, renderHook } from "@testing-library/react"
 import { usePuzzle } from "./use-puzzle"
-import { createSolvedBoard } from "@/lib/puzzle-shuffle"
+import { BLANK, BOARD_SIZE, createSolvedBoard } from "@/lib/puzzle-shuffle"
 import type { PuzzleImage } from "@/types/puzzle"
 
 const image: PuzzleImage = {
@@ -9,6 +9,17 @@ const image: PuzzleImage = {
   name: "테스트 이미지",
   url: "https://example.com/a.jpg",
   isPreset: true,
+}
+
+function getNeighborPositions(position: number): number[] {
+  const row = Math.floor(position / BOARD_SIZE)
+  const col = position % BOARD_SIZE
+  const neighbors: number[] = []
+  if (row > 0) neighbors.push(position - BOARD_SIZE)
+  if (row < BOARD_SIZE - 1) neighbors.push(position + BOARD_SIZE)
+  if (col > 0) neighbors.push(position - 1)
+  if (col < BOARD_SIZE - 1) neighbors.push(position + 1)
+  return neighbors
 }
 
 describe("usePuzzle", () => {
@@ -61,5 +72,35 @@ describe("usePuzzle", () => {
 
     rerender({ img: secondImage })
     expect(result.current.elapsedMs).toBe(0)
+  })
+
+  test("[S6-1] 빈칸에 인접한 조각을 클릭하면 서로 위치가 바뀐다", () => {
+    const { result } = renderHook(() => usePuzzle(image))
+    const blankIndex = result.current.board.indexOf(BLANK)
+    const [adjacentPosition] = getNeighborPositions(blankIndex)
+    const movedValue = result.current.board[adjacentPosition]
+
+    act(() => {
+      result.current.moveTile(adjacentPosition)
+    })
+
+    expect(result.current.board[blankIndex]).toBe(movedValue)
+    expect(result.current.board[adjacentPosition]).toBe(BLANK)
+  })
+
+  test("[S7] 빈칸에 인접하지 않은 조각을 클릭하면 배치가 그대로 유지된다", () => {
+    const { result } = renderHook(() => usePuzzle(image))
+    const blankIndex = result.current.board.indexOf(BLANK)
+    const neighbors = new Set(getNeighborPositions(blankIndex))
+    const nonAdjacentPosition = Array.from({ length: 16 }, (_, i) => i).find(
+      (position) => position !== blankIndex && !neighbors.has(position)
+    )!
+    const before = [...result.current.board]
+
+    act(() => {
+      result.current.moveTile(nonAdjacentPosition)
+    })
+
+    expect(result.current.board).toEqual(before)
   })
 })

@@ -1,5 +1,6 @@
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { PuzzleBoard } from "./puzzle-board"
 import { BLANK, createSolvedBoard } from "@/lib/puzzle-shuffle"
 import type { PuzzleImage } from "@/types/puzzle"
@@ -53,5 +54,18 @@ describe("PuzzleBoard", () => {
     const board = createSolvedBoard()
     render(<PuzzleBoard image={image} board={board} elapsedMs={47_000} />)
     expect(screen.getByLabelText("경과 시간")).toHaveTextContent("00:47")
+  })
+
+  test("[S6-1][S7] 타일을 클릭하면 onTileClick에 해당 위치를 전달한다", async () => {
+    const user = userEvent.setup()
+    const board = createSolvedBoard()
+    const onTileClick = vi.fn()
+    render(
+      <PuzzleBoard image={image} board={board} elapsedMs={0} onTileClick={onTileClick} />
+    )
+
+    await user.click(screen.getByTestId("tile-3"))
+
+    expect(onTileClick).toHaveBeenCalledWith(3)
   })
 })

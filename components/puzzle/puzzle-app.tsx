@@ -10,7 +10,7 @@ import { PuzzleBoard } from "./puzzle-board"
 
 export function PuzzleApp() {
   const [selectedImage, setSelectedImage] = React.useState<PuzzleImage | null>(null)
-  const { board, elapsedMs } = usePuzzle(selectedImage)
+  const { board, elapsedMs, moveTile } = usePuzzle(selectedImage)
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
@@ -41,7 +41,12 @@ export function PuzzleApp() {
         <Card className="items-center justify-center">
           <CardContent className="flex min-h-70 flex-col items-center justify-center gap-2">
             {selectedImage ? (
-              <PuzzleBoard image={selectedImage} board={board} elapsedMs={elapsedMs} />
+              <PuzzleBoard
+                image={selectedImage}
+                board={board}
+                elapsedMs={elapsedMs}
+                onTileClick={moveTile}
+              />
             ) : (
               <p className="text-sm text-muted-foreground">이미지를 선택해주세요</p>
             )}

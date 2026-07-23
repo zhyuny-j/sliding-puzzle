@@ -10,6 +10,7 @@ export interface PuzzleBoardProps {
   image: PuzzleImage
   board: number[]
   elapsedMs: number
+  onTileClick?: (position: number) => void
 }
 
 function getTileContainerStyle(position: number): React.CSSProperties {
@@ -41,7 +42,7 @@ function getTileLayerStyle(value: number, imageUrl: string): React.CSSProperties
   }
 }
 
-export function PuzzleBoard({ image, board, elapsedMs }: PuzzleBoardProps) {
+export function PuzzleBoard({ image, board, elapsedMs, onTileClick }: PuzzleBoardProps) {
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -52,11 +53,19 @@ export function PuzzleBoard({ image, board, elapsedMs }: PuzzleBoardProps) {
       </div>
       <div className="relative aspect-square w-full overflow-hidden rounded-md border">
         {board.map((value, position) => (
-          <div key={position} data-testid={`tile-${position}`} style={getTileContainerStyle(position)}>
+          <button
+            key={position}
+            type="button"
+            data-testid={`tile-${position}`}
+            aria-label={value === BLANK ? "빈칸" : `조각 ${value}`}
+            onClick={() => onTileClick?.(position)}
+            className="cursor-pointer border-0 bg-transparent p-0"
+            style={getTileContainerStyle(position)}
+          >
             {value !== BLANK && (
               <div data-tile-layer style={getTileLayerStyle(value, image.url)} />
             )}
-          </div>
+          </button>
         ))}
       </div>
     </div>
