@@ -1,8 +1,23 @@
-import { describe, expect, test } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { PuzzleApp } from "./puzzle-app"
 import { PRESET_IMAGES } from "@/config/puzzle-presets"
+
+class FakeImage {
+  onload: (() => void) | null = null
+  onerror: (() => void) | null = null
+  private _src = ""
+
+  set src(value: string) {
+    this._src = value
+    queueMicrotask(() => this.onload?.())
+  }
+
+  get src() {
+    return this._src
+  }
+}
 
 describe("PuzzleApp", () => {
   test("[S1-1] 화면 상단에 타이틀이 표시된다", () => {
@@ -76,5 +91,31 @@ describe("PuzzleApp", () => {
       screen.queryByText("진행 중인 퍼즐을 포기하고 전환하시겠습니까?")
     ).not.toBeInTheDocument()
     expect(screen.getAllByText(PRESET_IMAGES[0].name).length).toBeGreaterThan(0)
+  })
+
+  describe("URL로 이미지 추가 후 자동 선택", () => {
+    beforeEach(() => {
+      window.localStorage.clear()
+      vi.stubGlobal("Image", FakeImage)
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    test("[S3-2] 추가된 이미지가 자동 선택되어 퍼즐과 00:00 타이머가 나타난다", async () => {
+      const user = userEvent.setup()
+      render(<PuzzleApp />)
+
+      await user.type(screen.getByLabelText("이미지 URL"), "https://example.com/sea.jpg")
+      await user.type(screen.getByLabelText("이름"), "바다 풍경")
+      await user.click(screen.getByRole("button", { name: "추가" }))
+
+      await waitFor(() => {
+        expect(screen.getByTestId("tile-0")).toBeInTheDocument()
+      })
+      expect(screen.getAllByText("바다 풍경").length).toBeGreaterThan(0)
+      expect(screen.getByLabelText("경과 시간")).toHaveTextContent("00:00")
+    })
   })
 })
