@@ -278,8 +278,10 @@ None (백엔드·외부 서비스 없음, 브라우저 `localStorage`만 사용)
 
 ---
 
-### 최종 Checkpoint
-- [ ] spec.md의 **End-to-end 검증** 절차를 실행하고, 통과한 판정 기준의 체크박스를 spec.md에서 켠다 (체크는 실행 증거로만 켠다)
+### 최종 Checkpoint ✅ 완료
+- [x] spec.md의 **End-to-end 검증** 절차를 실행하고, 통과한 판정 기준의 체크박스를 spec.md에서 켠다 (체크는 실행 증거로만 켠다)
+  - 증거: `e2e/sliding-puzzle-persistence.spec.ts`(S13-1/S13-2/INV-3 중심)에 이어, spec.md의 7단계 절차를 그대로 순서대로 실행하는 `e2e/sliding-puzzle-e2e-verification.spec.ts`를 추가해 S1→S2→S6/S8→S9→S11→S3→S13을 한 흐름으로 통과 확인 (13.8s). `bun run test`(72 passed), `bun run typecheck`, `scripts/spec-coverage.sh sliding-puzzle --tests` 모두 통과.
+  - S5/INV-1 셔플 checkbox 정정: `## 불변 규칙` 섹션의 INV-1은 이미 Task 1에서 체크돼 있었으나, S5 시나리오 안의 동일 항목 체크박스가 누락돼 있어 함께 켰다(같은 기준의 중복 표기, Task 1의 `puzzle-shuffle.test.ts` 200회 반복 검증으로 이미 증명됨).
 
 ## 미결정 항목
 

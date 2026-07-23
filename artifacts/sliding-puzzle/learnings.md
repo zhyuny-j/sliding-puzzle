@@ -95,3 +95,17 @@ date: 2026-07-23
 **에피소드**: Task 11에서 타이틀에 `Press_Start_2P`를 `--font-heading`으로 적용했더니, 실제 브라우저 스크린샷에서 "내가 원하는 사진으로 퍼즐 만들기"가 단어마다 큰 간격이 뜬 채로 깨져 보였다. `Black_Han_Sans({subsets:["korean"]})`로 바꾸려 하자 `tsc`가 `Type '"korean"' is not assignable to type '"latin"'` 에러를 냈고, `Do_Hyeon`도 동일했다 — 두 폰트 모두 next/font/google 타입 선언상 `subsets`가 `["latin"]`만 허용했다. `Do_Hyeon({subsets:["latin"]})`으로 지정하고 실제 브라우저에서 확인하니 한글이 정상적인 간격으로 렌더링됐다(타입의 "latin" 라벨이 실제 글리프 커버리지를 반영하지 않음).
 
 **증거**: Claude in Chrome 스크린샷으로 `Press_Start_2P` 적용 시 "내가 원하는 사진으로 퍼즐 만들기"의 단어 간격이 비정상적으로 벌어진 것을 확인; `Do_Hyeon`으로 교체 후 동일 화면에서 정상 렌더링 확인. `bun run typecheck`/`bun run build` 모두 통과.
+
+---
+triggers: [Claude in Chrome, CDP, Runtime.evaluate timed out, 45000ms, 클릭 루프, requestAnimationFrame, 실제 브라우저 자동화 느림]
+status: verified
+scope: this-repo (mcp__claude-in-chrome__javascript_tool)
+date: 2026-07-23
+---
+## Claude in Chrome의 javascript_tool로 수십 번 연속 클릭하는 루프를 돌리면 스크립트는 끝까지 실행되는데도 도구 호출 자체가 45초 타임아웃으로 실패 보고될 수 있다
+
+**지시문**: `mcp__claude-in-chrome__javascript_tool`로 15-puzzle처럼 수십 스텝의 클릭 시퀀스를 한 번의 `javascript_exec` 호출 안에서 돌리지 않는다. 클릭 사이에 React 리렌더를 기다리려고 `setTimeout`/`requestAnimationFrame`으로 딜레이를 주면(딜레이 없이 연속 클릭하면 클로저가 stale해져 상태 갱신이 아예 씹힌다), 스텝 수가 많아질수록 실제 완료 시간이 CDP `Runtime.evaluate`의 45초 제한에 가까워지거나 넘어서 "타임아웃" 에러로 보고된다 — 하지만 페이지 안의 스크립트는 백그라운드에서 계속 실행되어 실제로는 끝까지 진행돼 있는 경우가 있었다(다음 호출로 상태를 조회하면 확인 가능). 결론이 나기 전에 실패로 단정하지 말고 별도 호출로 실제 DOM 상태를 조회해 진행 여부를 먼저 확인한다. 근본 해결은 대량 반복 상호작용을 이 도구의 단일 호출에 욱여넣지 않고, Playwright E2E(같은 세션의 `mcp__Claude_Browser__*`보다도 더 안정적으로 다수 스텝을 처리)로 옮기는 것이다.
+
+**에피소드**: 최종 Checkpoint에서 spec.md의 End-to-end 검증 절차를 실제 브라우저(Claude in Chrome)로 수동 실행하려고 47~49수짜리 퍼즐 풀이 클릭 루프를 시도했으나 두 차례 모두 45초 타임아웃으로 실패 보고됐다. 이후 상태를 조회해보니 일부(때로는 상당 부분)는 실제로 진행돼 있었다. 다수 스텝을 안정적으로 재현 가능하게 실행하려면 Playwright가 더 적합하다고 판단해, `e2e/sliding-puzzle-e2e-verification.spec.ts`로 전체 7단계를 자동화했다(13.8s에 통과, 훨씬 빠르고 안정적).
+
+**증거**: 동일한 클릭 루프가 Playwright(`sliding-puzzle-e2e-verification.spec.ts`)에서는 13.8초에 안정적으로 통과한 반면, Claude in Chrome의 `javascript_tool` 단일 호출로는 10~49수 루프 모두 최소 두 차례 45초 타임아웃 보고를 겪음.
