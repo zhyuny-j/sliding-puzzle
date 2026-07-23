@@ -30,6 +30,11 @@ export function isSolvable(board: number[]): boolean {
   return (inversions + blankRowFromBottom) % 2 === 1
 }
 
+export function isSolvedBoard(board: number[]): boolean {
+  const solved = createSolvedBoard()
+  return board.length === solved.length && board.every((value, index) => value === solved[index])
+}
+
 function shuffleArray<T>(items: T[], random: () => number): T[] {
   const result = [...items]
   for (let i = result.length - 1; i > 0; i--) {

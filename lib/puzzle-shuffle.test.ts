@@ -5,6 +5,7 @@ import {
   createSolvedBoard,
   generateSolvableShuffle,
   isSolvable,
+  isSolvedBoard,
 } from "./puzzle-shuffle"
 
 describe("puzzle-shuffle", () => {
@@ -50,5 +51,12 @@ describe("puzzle-shuffle", () => {
     expect(calls).toBeGreaterThan(0)
     expect(isSolvable(board)).toBe(true)
     expect(board.sort((a, b) => a - b)).toEqual(createSolvedBoard().sort((a, b) => a - b))
+  })
+
+  test("[S8-2] isSolvedBoard는 정답 배치일 때만 true를 반환한다", () => {
+    expect(isSolvedBoard(createSolvedBoard())).toBe(true)
+    const shuffled = createSolvedBoard()
+    ;[shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]]
+    expect(isSolvedBoard(shuffled)).toBe(false)
   })
 })

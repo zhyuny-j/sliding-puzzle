@@ -7,10 +7,11 @@ import { PRESET_IMAGES } from "@/config/puzzle-presets"
 import { usePuzzle } from "@/hooks/use-puzzle"
 import type { PuzzleImage } from "@/types/puzzle"
 import { PuzzleBoard } from "./puzzle-board"
+import { SuccessPanel } from "./success-panel"
 
 export function PuzzleApp() {
   const [selectedImage, setSelectedImage] = React.useState<PuzzleImage | null>(null)
-  const { board, elapsedMs, moveTile } = usePuzzle(selectedImage)
+  const { board, elapsedMs, moveTile, isSolved } = usePuzzle(selectedImage)
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
@@ -40,7 +41,13 @@ export function PuzzleApp() {
 
         <Card className="items-center justify-center">
           <CardContent className="flex min-h-70 flex-col items-center justify-center gap-2">
-            {selectedImage ? (
+            {selectedImage && isSolved ? (
+              <SuccessPanel
+                image={selectedImage}
+                elapsedMs={elapsedMs}
+                onSubmit={() => {}}
+              />
+            ) : selectedImage ? (
               <PuzzleBoard
                 image={selectedImage}
                 board={board}

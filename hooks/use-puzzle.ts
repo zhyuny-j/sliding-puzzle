@@ -2,13 +2,14 @@
 
 import * as React from "react"
 
-import { BLANK, BOARD_SIZE, generateSolvableShuffle } from "@/lib/puzzle-shuffle"
+import { BLANK, BOARD_SIZE, generateSolvableShuffle, isSolvedBoard } from "@/lib/puzzle-shuffle"
 import type { PuzzleImage } from "@/types/puzzle"
 
 export interface UsePuzzleResult {
   board: number[]
   elapsedMs: number
   moveTile: (position: number) => void
+  isSolved: boolean
 }
 
 function isAdjacent(a: number, b: number): boolean {
@@ -27,26 +28,31 @@ export function usePuzzle(image: PuzzleImage | null): UsePuzzleResult {
     image ? generateSolvableShuffle() : []
   )
   const [elapsedMs, setElapsedMs] = React.useState(0)
+  const isSolved = board.length > 0 && isSolvedBoard(board)
 
   React.useEffect(() => {
     if (!image) {
       setBoard([])
       setElapsedMs(0)
-      return
+    } else {
+      setBoard(generateSolvableShuffle())
+      setElapsedMs(0)
     }
+  }, [image?.id])
 
-    setBoard(generateSolvableShuffle())
-    setElapsedMs(0)
+  React.useEffect(() => {
+    if (!image || isSolved) return
 
     const intervalId = setInterval(() => {
       setElapsedMs((prev) => prev + 1000)
     }, 1000)
 
     return () => clearInterval(intervalId)
-  }, [image?.id])
+  }, [image?.id, isSolved])
 
   const moveTile = React.useCallback((position: number) => {
     setBoard((prev) => {
+      if (isSolvedBoard(prev)) return prev
       const blankIndex = prev.indexOf(BLANK)
       if (!isAdjacent(position, blankIndex)) return prev
       const next = [...prev]
@@ -55,5 +61,5 @@ export function usePuzzle(image: PuzzleImage | null): UsePuzzleResult {
     })
   }, [])
 
-  return { board, elapsedMs, moveTile }
+  return { board, elapsedMs, moveTile, isSolved }
 }
