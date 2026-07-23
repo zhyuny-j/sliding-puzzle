@@ -3,18 +3,28 @@
 import * as React from "react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PRESET_IMAGES } from "@/config/puzzle-presets"
+import { useImageLibrary } from "@/hooks/use-image-library"
 import { usePuzzle } from "@/hooks/use-puzzle"
 import { useRanking } from "@/hooks/use-ranking"
 import type { PuzzleImage } from "@/types/puzzle"
+import { AddImageForm } from "./add-image-form"
 import { PuzzleBoard } from "./puzzle-board"
 import { RankingPanel } from "./ranking-panel"
 import { SuccessPanel } from "./success-panel"
 
 export function PuzzleApp() {
   const [selectedImage, setSelectedImage] = React.useState<PuzzleImage | null>(null)
+  const { images, addImageFromUrl } = useImageLibrary()
   const { board, elapsedMs, moveTile, isSolved, reset } = usePuzzle(selectedImage)
   const { rankings, submitRanking } = useRanking(selectedImage?.id ?? null)
+
+  async function handleAddImage(url: string, name: string) {
+    const result = await addImageFromUrl(url, name)
+    if (result.ok) {
+      setSelectedImage(result.image)
+    }
+    return result
+  }
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
@@ -25,9 +35,9 @@ export function PuzzleApp() {
           <CardHeader>
             <CardTitle>기본 퍼즐</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-3 gap-2">
-              {PRESET_IMAGES.map((image) => (
+              {images.map((image) => (
                 <button
                   key={image.id}
                   type="button"
@@ -39,6 +49,7 @@ export function PuzzleApp() {
                 />
               ))}
             </div>
+            <AddImageForm onAddImage={handleAddImage} />
           </CardContent>
         </Card>
 
