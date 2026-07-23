@@ -53,3 +53,17 @@ date: 2026-07-23
 **에피소드**: Task 8~9 Checkpoint에서 `SwitchConfirmDialog`의 "취소" 클릭 후 다이얼로그가 DOM에서 사라지지 않는 것을 발견했다. `radix-ui`/shadcn `tailwind.css`의 `@custom-variant data-open`/`data-closed`가 `data-state`도 함께 매칭하는지부터 의심했으나(이미 매칭하도록 되어 있었음, 오탐), 실제 원인은 `document.hidden === true`(Browser MCP 탭이 배경 탭으로 취급됨)로 인한 애니메이션 타임라인 정지였다. `components/ui/alert-dialog.tsx`는 수정하지 않았다 — 코드에는 문제가 없었다.
 
 **증거**: `content.getAnimations()[0]`이 `currentTime: 0`, `playState: "running"`에서 멈춰 있음을 확인; `document.visibilityState === "hidden"` 확인; `dispatchEvent(new AnimationEvent('animationend', {animationName:'exit'}))` 수동 발생 시 다이얼로그 즉시 unmount 확인. S12-2(확인 시 전환)도 이어서 실제 브라우저로 검증: 16 tiles, "⏱ 00:00", 새 이미지 이름 표시 확인.
+
+---
+triggers: [Playwright, page.addInitScript, Math.random, Next.js dev, HMR, Fast Refresh, next dev, E2E flaky, 상태 초기화, 셔플 결정론]
+status: verified
+scope: this-repo (Next.js 16.1.6 dev server, Playwright)
+date: 2026-07-23
+---
+## Playwright E2E에서 `window.Math.random`을 전역 스텁하면 Next.js dev 서버의 HMR이 예상치 않게 재연결되어 컴포넌트가 리마운트되고 비영속 state가 사라진다
+
+**지시문**: 셔플처럼 `Math.random`에 의존하는 로직을 Playwright E2E에서 결정론적으로 만들고 싶어도 `page.addInitScript(() => { window.Math.random = () => 0 })`로 전역을 덮어쓰지 않는다. `next dev`(HMR/Fast Refresh) 환경에서 이 스텁을 걸면 원인 불명의 추가 HMR 재연결이 발생하고, 그 사이 `localStorage`에 저장되지 않는 React state(`useState`로만 관리되는 `selectedImage` 등)가 리마운트로 초기화돼 있을 수 있다 — `add-image-form`은 성공 시 필드를 비웠는데도(성공 경로 확정) 정작 화면은 "이미지를 선택해주세요"로 돌아가 있는 모순된 상태로 나타났다. 대신 화면에 실제로 렌더된 보드를 `page.evaluate`로 읽어(`aria-label="조각 N"` 파싱) 그 값을 그대로 풀이(IDA* 등)해 클릭 순서를 계산하면, 셔플 알고리즘을 스텁하지 않고도 결정론적으로 완주할 수 있다.
+
+**에피소드**: Task 10 E2E(`e2e/sliding-puzzle-persistence.spec.ts`)에서 셔플 결과를 고정하려고 `Math.random` 스텁 + 미리 계산한 47수 이동 시퀀스를 하드코딩했으나, 매 실행마다 `tile-0`이 끝내 나타나지 않고 타임아웃됐다. 디버그 로그로 `[HMR] connected`가 예상보다 한 번 더 찍히는 것과, add-image 폼 필드는 비어 있는데(성공) 화면은 빈 상태로 돌아간 것을 확인해 리마운트로 인한 state 유실을 의심했다. 스텁을 제거하고 실제 렌더된 보드를 읽어 그때그때 IDA*로 풀이하는 방식으로 바꾸자 즉시 통과했다(8.7s).
+
+**증거**: `sliding-puzzle-persistence.spec.ts`의 동적 solve() 방식으로 `[S13-1][S13-2][INV-3]` 테스트 1개 통과; `bun run test`(72 passed), `bun run typecheck`, `scripts/spec-coverage.sh sliding-puzzle --tests` 전체 통과.
